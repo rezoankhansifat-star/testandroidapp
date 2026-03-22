@@ -1,0 +1,5 @@
+{
+  "name": "FinTrack - Expense Tracker",
+  "description": "A high-performance personal finance and expense tracker with local storage persistence and beautiful analytics.",
+  "requestFramePermissions": []
+}
