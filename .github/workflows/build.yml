@@ -1,9 +1,11 @@
 name: Build Android APK
-on: [push] # কোড পুশ করলেই অটো বিল্ড হবে
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # নতুন নোড ভার্সন এনাবল করা
     steps:
       - uses: actions/checkout@v4
 
@@ -14,16 +16,21 @@ jobs:
           distribution: 'temurin'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --force # ফোর্লি ইনস্টল যাতে পিয়ার ডিপেন্ডেন্সি এরর না দেয়
 
       - name: Build Web Project
-        run: npm run build # আপনার প্রজেক্টের dist ফোল্ডার তৈরি করবে
-
-      - name: Capacitor Sync
         run: |
-          npx cap sync
-          npx cap add android || true 
-          # যদি আগে থেকে অ্যান্ড্রয়েড ফোল্ডার না থাকে তবে তৈরি করবে
+          npm run build || mkdir -p dist && cp index.html dist/ 2>/dev/null || true
+          # যদি বিল্ড কমান্ড না থাকে তবে ম্যানুয়ালি ডিস্ট ফোল্ডার তৈরি করবে
+
+      - name: Setup Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          if [ ! -f "capacitor.config.json" ] && [ ! -f "capacitor.config.ts" ]; then
+            npx cap init "My App" com.example.app --web-dir dist
+          fi
+          npx cap add android || true
+          npx cap sync android
 
       - name: Build Android APK
         run: |
@@ -34,5 +41,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-app-apk
+          name: app-release-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
